@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head><title>Orders — InvStock</title></head>
+<body>
+<main>
+  <div class="page-header flex justify-between items-center">
+    <div>
+      <h1 class="page-title">Orders</h1>
+      <p class="page-subtitle">Track purchase and supply orders</p>
+    </div>
+    <a th:if="${sessionRole == 'ADMIN' or sessionRole == 'MANAGER'}"
+       th:href="@{/orders/new}" class="btn btn-primary">
+      <i class="bi bi-plus-lg"></i> New Order
+    </a>
+  </div>
+
+  <div th:if="${success}" class="alert alert-success">
+    <i class="bi bi-check-circle"></i><span th:text="${success}"></span>
+  </div>
+  <div th:if="${error}" class="alert alert-danger">
+    <i class="bi bi-exclamation-circle"></i><span th:text="${error}"></span>
+  </div>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Product</th>
+          <th>Supplier</th>
+          <th>Qty</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(orders)}">
+          <td colspan="7" class="text-center text-muted" style="padding:30px">
+            No orders yet.
+          </td>
+        </tr>
+        <tr th:each="o : ${orders}">
+          <td class="font-mono" th:text="${o.orderNumber}"></td>
+          <td style="font-weight:500" th:text="${o.product.name}"></td>
+          <td th:text="${o.supplier.companyName}"></td>
+          <td th:text="${o.quantity}"></td>
+          <td th:text="'LKR ' + ${o.totalAmount}"></td>
+          <td>
+                            <span class="badge"
+                                  th:classappend="${o.status.name() == 'PENDING'}    ? 'badge-warning' :
+                                                  (${o.status.name() == 'DELIVERED'} ? 'badge-success' :
+                                                  (${o.status.name() == 'CANCELLED'} ? 'badge-danger'  :
+                                                  (${o.status.name() == 'CONFIRMED'} ? 'badge-info'    :
+                                                                                        'badge-purple')))"
+                                  th:text="${o.status}">
+                            </span>
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <a th:if="${sessionRole == 'ADMIN' or sessionRole == 'MANAGER'}"
+                 th:href="@{/orders/{id}/edit(id=${o.id})}"
+                 class="btn btn-outline btn-sm btn-icon">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <form th:if="${sessionRole == 'ADMIN'}"
+                    th:action="@{/orders/{id}/delete(id=${o.id})}"
+                    method="post"
+                    onsubmit="return confirm('Delete this order?')">
+                <button class="btn btn-danger btn-sm btn-icon">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</body>
+</html>
