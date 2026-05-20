@@ -39,9 +39,16 @@
           <span class="error-msg" th:errors="*{email}"
                 th:if="${#fields.hasErrors('email')}"></span>
         </div>
+        <!-- Replace the phone input -->
         <div class="form-group">
           <label class="form-label">Phone</label>
-          <input type="text" th:field="*{phone}" class="form-control">
+          <input type="tel" th:field="*{phone}" class="form-control"
+                 placeholder="e.g. 0771234567"
+                 maxlength="10"
+                 oninput="this.value=this.value.replace(/[^0-9+\-\s()]/g,'')">
+          <span class="error-msg" th:errors="*{phone}"
+                th:if="${#fields.hasErrors('phone')}"></span>
+          <span style="font-size:11px;color:#9ca3af">Numbers only, max 10 digits</span>
         </div>
         <div class="form-group full">
           <label class="form-label">Address</label>

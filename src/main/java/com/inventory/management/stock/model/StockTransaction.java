@@ -12,7 +12,7 @@ import lombok.*;
 public class StockTransaction extends BaseEntity {
 
     @NotNull(message = "Product is required")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 

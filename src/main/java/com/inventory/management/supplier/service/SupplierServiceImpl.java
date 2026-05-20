@@ -15,11 +15,14 @@ public class SupplierServiceImpl implements SupplierService {
 
     @Autowired private SupplierRepository supplierRepository;
 
-    @Override public List<Supplier> getAllSuppliers() { return supplierRepository.findByActiveTrue(); }
+    @Override public List<Supplier> getAllSuppliers() {
+        return supplierRepository.findByActiveTrue();
+    }
     @Override public Optional<Supplier> getSupplierById(Long id) { return supplierRepository.findById(id); }
 
     @Override
     public Supplier saveSupplier(Supplier supplier) {
+
         return supplierRepository.save(supplier);
     }
 

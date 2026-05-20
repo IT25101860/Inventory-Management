@@ -23,8 +23,11 @@ public class Supplier extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column
+    @Pattern(regexp = "^[0-9+\\-\\s()]{7,15}$",
+            message = "Phone must be 7-15 digits only")
+    @Column(length = 10)
     private String phone;
+
 
     @Column(length = 300)
     private String address;
