@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head><title th:text="${isEdit} ? 'Edit User — InvStock' : 'New User — InvStock'">User Form</title></head>
+<body>
+<main>
+  <div class="page-header flex items-center gap-3">
+    <a th:href="@{/users}" class="btn btn-outline btn-icon"><i class="bi bi-arrow-left"></i></a>
+    <div>
+      <h1 class="page-title" th:text="${isEdit} ? 'Edit User' : 'Add New User'"></h1>
+      <p class="page-subtitle">Fill in the details below</p>
+    </div>
+  </div>
+
+  <div class="card" style="max-width:680px">
+    <form th:action="${isEdit} ? @{/users/{id}/edit(id=${user.id})} : @{/users/new}"
+          th:object="${user}" method="post">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Username *</label>
+          <input type="text" th:field="*{username}" class="form-control"
+                 th:classappend="${#fields.hasErrors('username')} ? ' is-invalid'">
+          <span class="error-msg" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email *</label>
+          <input type="email" th:field="*{email}" class="form-control"
+                 th:classappend="${#fields.hasErrors('email')} ? ' is-invalid'">
+          <span class="error-msg" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" th:text="${isEdit} ? 'New Password (leave blank to keep)' : 'Password *'"></label>
+          <input type="password" th:field="*{password}" class="form-control">
+          <span class="error-msg" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role *</label>
+          <select th:field="*{role}" class="form-control">
+            <option th:each="r : ${roles}" th:value="${r}" th:text="${r}"></option>
+          </select>
+        </div>
+        <div class="form-group" th:if="${isEdit}">
+          <label class="form-label">Status</label>
+          <select th:field="*{active}" class="form-control">
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-2" style="margin-top:24px">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-lg"></i>
+          <span th:text="${isEdit} ? 'Update User' : 'Create User'"></span>
+        </button>
+        <a th:href="@{/users}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</main>
+</body>
+</html>

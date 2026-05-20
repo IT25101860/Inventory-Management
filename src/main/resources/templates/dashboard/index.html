@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head><title>Dashboard — InvStock</title></head>
+<body>
+<main>
+
+  <div class="page-header flex justify-between items-center">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Welcome back! Here's what's happening today.</p>
+    </div>
+  </div>
+
+  <!-- Flash alerts -->
+  <div th:if="${success}" class="alert alert-success">
+    <i class="bi bi-check-circle"></i>
+    <span th:text="${success}"></span>
+  </div>
+  <div th:if="${error}" class="alert alert-danger">
+    <i class="bi bi-exclamation-circle"></i>
+    <span th:text="${error}"></span>
+  </div>
+
+  <!-- ── STAT CARDS ──────────────────────────── -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="bi bi-box-seam"></i></div>
+      <div>
+        <div class="stat-value" th:text="${totalProducts}">0</div>
+        <div class="stat-label">Total Products</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="bi bi-truck"></i></div>
+      <div>
+        <div class="stat-value" th:text="${totalSuppliers}">0</div>
+        <div class="stat-label">Suppliers</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon amber"><i class="bi bi-bag-check"></i></div>
+      <div>
+        <div class="stat-value" th:text="${totalOrders}">0</div>
+        <div class="stat-label">Total Orders</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red"><i class="bi bi-clock-history"></i></div>
+      <div>
+        <div class="stat-value" th:text="${pendingOrders}">0</div>
+        <div class="stat-label">Pending Orders</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon purple"><i class="bi bi-people"></i></div>
+      <div>
+        <div class="stat-value" th:text="${totalUsers}">0</div>
+        <div class="stat-label">Users</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM TWO PANELS ───────────────────── -->
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px">
+
+    <!-- Low Stock Alerts -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Low Stock Alerts</span>
+        <a th:href="@{/products}" class="btn btn-outline btn-sm">View All</a>
+      </div>
+
+      <div th:if="${#lists.isEmpty(lowStockProducts)}"
+           class="text-muted text-center" style="padding:20px">
+        No low stock items
+      </div>
+
+      <div class="table-wrap" th:unless="${#lists.isEmpty(lowStockProducts)}">
+        <table class="data-table">
+          <thead>
+          <tr>
+            <th>Image</th>
+            <th>Product</th>
+            <th>Stock</th>
+            <th>Reorder</th>
+            <th>Status</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="p : ${lowStockProducts}">
+
+            <!-- Product image or fallback icon -->
+            <td>
+              <img th:if="${p.imagePath != null}"
+                   th:src="@{'/uploads/products/' + ${p.imagePath}}"
+                   style="width:36px; height:36px; object-fit:cover; border-radius:6px; border:1px solid #e5e7eb"
+                   alt="product image">
+              <div th:unless="${p.imagePath != null}"
+                   style="width:36px; height:36px; background:#f3f4f6; border-radius:6px;
+                                            display:flex; align-items:center; justify-content:center; color:#9ca3af">
+                <i class="bi bi-box"></i>
+              </div>
+            </td>
+
+            <td th:text="${p.name}"></td>
+            <td th:text="${p.stockQuantity}"></td>
+            <td th:text="${p.reorderLevel}"></td>
+            <td>
+                                <span th:if="${p.outOfStock}"
+                                      class="badge badge-danger">Out of Stock</span>
+              <span th:unless="${p.outOfStock}"
+                    class="badge badge-warning">Low</span>
+            </td>
+
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Recent Orders</span>
+        <a th:href="@{/orders}" class="btn btn-outline btn-sm">View All</a>
+      </div>
+
+      <div th:if="${#lists.isEmpty(recentOrders)}"
+           class="text-muted text-center" style="padding:20px">
+        No orders yet
+      </div>
+
+      <div class="table-wrap" th:unless="${#lists.isEmpty(recentOrders)}">
+        <table class="data-table">
+          <thead>
+          <tr>
+            <th>Order #</th>
+            <th>Product</th>
+            <th>Status</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="o : ${recentOrders}">
+            <td class="font-mono" th:text="${o.orderNumber}"></td>
+            <td th:text="${o.product.name}"></td>
+            <td>
+                                <span class="badge"
+                                      th:classappend="${o.status.name() == 'PENDING'}    ? 'badge-warning'  :
+                                                      (${o.status.name() == 'DELIVERED'} ? 'badge-success'  :
+                                                      (${o.status.name() == 'CANCELLED'} ? 'badge-danger'   :
+                                                                                           'badge-info'))"
+                                      th:text="${o.status}">
+                                </span>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+</body>
+</html>
