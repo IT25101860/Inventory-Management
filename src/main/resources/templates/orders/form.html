@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head><title>Order Form — InvStock</title></head>
+<body>
+<main>
+  <div class="page-header flex items-center gap-3">
+    <a th:href="@{/orders}" class="btn btn-outline btn-icon">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <h1 class="page-title" th:text="${isEdit} ? 'Edit Order' : 'New Order'"></h1>
+      <p class="page-subtitle">Fill in the order details</p>
+    </div>
+  </div>
+
+  <div class="card" style="max-width:780px">
+    <form th:action="${isEdit} ? @{/orders/{id}/edit(id=${order.id})} : @{/orders/new}"
+          th:object="${order}" method="post">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Order Number *</label>
+          <input type="text" th:field="*{orderNumber}" class="form-control"
+                 placeholder="e.g. ORD-2024-001"
+                 th:classappend="${#fields.hasErrors('orderNumber')} ? ' is-invalid'">
+          <span class="error-msg" th:errors="*{orderNumber}"
+                th:if="${#fields.hasErrors('orderNumber')}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select th:field="*{status}" class="form-control">
+            <option th:each="s : ${statuses}"
+                    th:value="${s}" th:text="${s}"></option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Product *</label>
+          <select th:field="*{product.id}" class="form-control">
+            <option value="">-- Select Product --</option>
+            <option th:each="p : ${products}"
+                    th:value="${p.id}" th:text="${p.name}"></option>
+          </select>
+          <span class="error-msg" th:errors="*{product}"
+                th:if="${#fields.hasErrors('product')}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Supplier *</label>
+          <select th:field="*{supplier.id}" class="form-control">
+            <option value="">-- Select Supplier --</option>
+            <option th:each="s : ${suppliers}"
+                    th:value="${s.id}" th:text="${s.companyName}"></option>
+          </select>
+          <span class="error-msg" th:errors="*{supplier}"
+                th:if="${#fields.hasErrors('supplier')}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantity *</label>
+          <input type="number" th:field="*{quantity}"
+                 class="form-control" min="1"
+                 th:classappend="${#fields.hasErrors('quantity')} ? ' is-invalid'">
+          <span class="error-msg" th:errors="*{quantity}"
+                th:if="${#fields.hasErrors('quantity')}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total Amount (LKR) *</label>
+          <input type="number" th:field="*{totalAmount}"
+                 class="form-control" step="0.01" min="0"
+                 th:classappend="${#fields.hasErrors('totalAmount')} ? ' is-invalid'">
+          <span class="error-msg" th:errors="*{totalAmount}"
+                th:if="${#fields.hasErrors('totalAmount')}"></span>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Notes</label>
+          <textarea th:field="*{notes}" class="form-control"></textarea>
+        </div>
+      </div>
+      <div class="flex gap-2" style="margin-top:24px">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-lg"></i>
+          <span th:text="${isEdit} ? 'Update Order' : 'Place Order'"></span>
+        </button>
+        <a th:href="@{/orders}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</main>
+</body>
+</html>
