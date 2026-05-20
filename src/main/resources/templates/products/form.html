@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head><title>Product Form — InvStock</title></head>
+<body>
+<main>
+  <div class="page-header flex items-center gap-3">
+    <a th:href="@{/products}" class="btn btn-outline btn-icon"><i class="bi bi-arrow-left"></i></a>
+    <div>
+      <h1 class="page-title" th:text="${isEdit} ? 'Edit Product' : 'Add New Product'"></h1>
+      <p class="page-subtitle">Fill in the product details below</p>
+    </div>
+  </div>
+
+  <div class="card" style="max-width:780px">
+    <!-- Change the form opening tag to include enctype -->
+    <form th:action="${isEdit} ? @{/products/{id}/edit(id=${product.id})} : @{/products/new}"
+          th:object="${product}" method="post" enctype="multipart/form-data">
+      <div class="form-grid">
+        <!-- Image Upload -->
+        <div class="form-group full">
+          <label class="form-label">Product Image</label>
+          <!-- Show current image if editing -->
+          <div th:if="${isEdit and product.imagePath != null}" style="margin-bottom:10px">
+            <img th:src="@{'/uploads/products/' + ${product.imagePath}}"
+                 style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid #e5e7eb" alt="Current">
+            <p style="font-size:11px;color:#6b7280;margin-top:4px">Current image — upload a new one to replace</p>
+          </div>
+          <input type="file" name="imageFile" class="form-control" accept="image/*">
+          <p style="font-size:11px;color:#6b7280;margin-top:4px">Accepted: JPG, PNG, WEBP — Max 5MB</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Product Name *</label>
+          <input type="text" th:field="*{name}" class="form-control"
+                 th:classappend="${#fields.hasErrors('name')} ? ' is-invalid'">
+          <span class="error-msg" th:errors="*{name}" th:if="${#fields.hasErrors('name')}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">SKU *</label>
+          <input type="text" th:field="*{sku}" class="form-control" placeholder="e.g. ELEC-001"
+                 th:classappend="${#fields.hasErrors('sku')} ? ' is-invalid'">
+          <span class="error-msg" th:errors="*{sku}" th:if="${#fields.hasErrors('sku')}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category *</label>
+          <select th:field="*{category}" class="form-control">
+            <option value="">-- Select --</option>
+            <option th:each="c : ${categories}" th:value="${c}" th:text="${c.name().replace('_',' ')}"></option>
+          </select>
+          <span class="error-msg" th:errors="*{category}" th:if="${#fields.hasErrors('category')}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price (LKR) *</label>
+          <input type="number" th:field="*{price}" class="form-control" step="0.01" min="0"
+                 th:classappend="${#fields.hasErrors('price')} ? ' is-invalid'">
+          <span class="error-msg" th:errors="*{price}" th:if="${#fields.hasErrors('price')}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock Quantity</label>
+          <input type="number" th:field="*{stockQuantity}" class="form-control" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reorder Level</label>
+          <input type="number" th:field="*{reorderLevel}" class="form-control" min="0">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Description</label>
+          <textarea th:field="*{description}" class="form-control"></textarea>
+        </div>
+        <div class="form-group" th:if="${isEdit}">
+          <label class="form-label">Status</label>
+          <select th:field="*{active}" class="form-control">
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-2" style="margin-top:24px">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-lg"></i>
+          <span th:text="${isEdit} ? 'Update Product' : 'Create Product'"></span>
+        </button>
+        <a th:href="@{/products}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</main>
+</body>
+</html>

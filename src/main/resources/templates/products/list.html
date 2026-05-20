@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head><title>Products — InvStock</title></head>
+<body>
+<main>
+    <div class="page-header flex justify-between items-center">
+        <div>
+            <h1 class="page-title">Products</h1>
+            <p class="page-subtitle">Manage your product catalogue</p>
+        </div>
+        <!-- Only Admin and Manager can add products -->
+        <a th:if="${sessionRole == 'ADMIN' or sessionRole == 'MANAGER'}"
+           th:href="@{/products/new}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Add Product
+        </a>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success"><i class="bi bi-check-circle"></i><span th:text="${success}"></span></div>
+    <div th:if="${error}" class="alert alert-danger"><i class="bi bi-exclamation-circle"></i><span th:text="${error}"></span></div>
+
+    <div th:if="${lowStockCount > 0}" class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span><strong th:text="${lowStockCount}"></strong> product(s) are low on stock.</span>
+    </div>
+
+    <div class="card mb-4">
+        <form th:action="@{/products}" method="get" class="flex gap-2 items-center">
+            <input type="text" name="search" class="form-control" placeholder="Search products..."
+                   th:value="${search}" style="max-width:300px">
+            <button type="submit" class="btn btn-outline"><i class="bi bi-search"></i> Search</button>
+            <a th:href="@{/products}" class="btn btn-outline">Clear</a>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>SKU</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(products)}">
+                    <td colspan="8" class="text-center text-muted" style="padding:30px">No products found.</td>
+                </tr>
+                <tr th:each="p : ${products}">
+                    <td>
+                        <img th:if="${p.imagePath != null}"
+                             th:src="@{'/uploads/products/' + ${p.imagePath}}"
+                             style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb" alt="Product">
+                        <div th:unless="${p.imagePath != null}"
+                             style="width:44px;height:44px;background:#f3f4f6;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:18px">
+                            <i class="bi bi-box"></i>
+                        </div>
+                    </td>
+                    <td style="font-weight:500" th:text="${p.name}"></td>
+                    <td class="font-mono" th:text="${p.sku}"></td>
+                    <td><span class="badge badge-info" th:text="${p.category.name().replace('_',' ')}"></span></td>
+                    <td th:text="'LKR ' + ${p.price}"></td>
+                    <td>
+                        <span th:text="${p.stockQuantity}"></span>
+                        <span th:if="${p.outOfStock}" class="badge badge-danger" style="margin-left:4px">Out</span>
+                        <span th:if="${p.lowStock and !p.outOfStock}" class="badge badge-warning" style="margin-left:4px">Low</span>
+                    </td>
+                    <td>
+                        <span th:if="${p.active}" class="badge badge-success">Active</span>
+                        <span th:unless="${p.active}" class="badge badge-gray">Inactive</span>
+                    </td>
+                    <td>
+                        <div class="flex gap-2">
+                            <!-- Edit: Admin and Manager only -->
+                            <a th:if="${sessionRole == 'ADMIN' or sessionRole == 'MANAGER'}"
+                               th:href="@{/products/{id}/edit(id=${p.id})}"
+                               class="btn btn-outline btn-sm btn-icon"><i class="bi bi-pencil"></i></a>
+                            <!-- Delete: Admin only -->
+                            <form th:if="${sessionRole == 'ADMIN'}"
+                                  th:action="@{/products/{id}/delete(id=${p.id})}"
+                                  method="post" onsubmit="return confirm('Deactivate this product?')">
+                                <button class="btn btn-danger btn-sm btn-icon"><i class="bi bi-trash"></i></button>
+                            </form>
+                            <!-- Staff sees view-only indicator -->
+                            <span th:if="${sessionRole == 'STAFF'}"
+                                  class="badge badge-gray">View only</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+</body>
+</html>
