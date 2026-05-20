@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head><title>Record Stock — InvStock</title></head>
+<body>
+<main>
+  <div class="page-header flex items-center gap-3">
+    <a th:href="@{/stock}" class="btn btn-outline btn-icon">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+      <h1 class="page-title">Record Stock Transaction</h1>
+      <p class="page-subtitle">Log a stock movement for a product</p>
+    </div>
+  </div>
+
+  <div class="card" style="max-width:620px">
+    <form th:action="@{/stock/new}" th:object="${transaction}" method="post">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Product *</label>
+          <select th:field="*{product.id}" class="form-control">
+            <option value="">-- Select Product --</option>
+            <option th:each="p : ${products}"
+                    th:value="${p.id}"
+                    th:text="${p.name} + ' (Stock: ' + ${p.stockQuantity} + ')'">
+            </option>
+          </select>
+          <span class="error-msg" th:errors="*{product}"
+                th:if="${#fields.hasErrors('product')}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Transaction Type *</label>
+          <select th:field="*{type}" class="form-control">
+            <option value="">-- Select Type --</option>
+            <option th:each="t : ${types}"
+                    th:value="${t}"
+                    th:text="${t.name().replace('_',' ')}">
+            </option>
+          </select>
+          <span class="error-msg" th:errors="*{type}"
+                th:if="${#fields.hasErrors('type')}"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantity *</label>
+          <input type="number" th:field="*{quantity}"
+                 class="form-control" min="1">
+          <span class="error-msg" th:errors="*{quantity}"
+                th:if="${#fields.hasErrors('quantity')}"></span>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Notes</label>
+          <textarea th:field="*{notes}" class="form-control"
+                    placeholder="Optional notes..."></textarea>
+        </div>
+      </div>
+      <div class="flex gap-2" style="margin-top:24px">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-lg"></i> Record Transaction
+        </button>
+        <a th:href="@{/stock}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</main>
+</body>
+</html>
