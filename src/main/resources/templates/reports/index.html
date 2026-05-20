@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head><title>Reports — InvStock</title></head>
+<body>
+<main>
+
+    <!-- ── PAGE HEADER ───────────────────────────────── -->
+    <div class="page-header flex justify-between items-center">
+        <div>
+            <h1 class="page-title">Reports</h1>
+            <p class="page-subtitle">Full overview of inventory, orders and stock activity</p>
+        </div>
+    </div>
+
+    <!-- Flash messages -->
+    <div th:if="${success}" class="alert alert-success">
+        <i class="bi bi-check-circle"></i><span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="alert alert-danger">
+        <i class="bi bi-exclamation-circle"></i><span th:text="${error}"></span>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION 1 — PRODUCT SUMMARY
+    ══════════════════════════════════════════════════ -->
+    <div style="margin-bottom:10px">
+        <p style="font-size:12px;font-weight:700;text-transform:uppercase;
+                  letter-spacing:1px;color:#9ca3af;margin-bottom:14px">
+            Product Summary
+        </p>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom:24px">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-box-seam"></i></div>
+            <div>
+                <div class="stat-value" th:text="${totalProducts}">0</div>
+                <div class="stat-label">Total Products</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+            <div>
+                <div class="stat-value" th:text="${activeProducts}">0</div>
+                <div class="stat-label">Active Products</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="bi bi-exclamation-triangle"></i></div>
+            <div>
+                <div class="stat-value" th:text="${lowStockCount}">0</div>
+                <div class="stat-label">Low Stock Items</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="bi bi-currency-dollar"></i></div>
+            <div>
+                <div class="stat-value"
+                     style="font-size:16px"
+                     th:text="'LKR ' + ${#numbers.formatDecimal(totalInventoryValue,1,'COMMA',2,'POINT')}">
+                </div>
+                <div class="stat-label">Total Inventory Value</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products by Category + Top Products by Value -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+
+        <!-- Products by Category -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Products by Category</span>
+            </div>
+            <div th:if="${productsByCategory.isEmpty()}"
+                 class="text-muted text-center" style="padding:20px">
+                No products yet
+            </div>
+            <div class="table-wrap" th:unless="${productsByCategory.isEmpty()}">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Count</th>
+                        <th>Share</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="entry : ${productsByCategory}">
+                        <td>
+                                <span class="badge badge-info"
+                                      th:text="${entry.key}"></span>
+                        </td>
+                        <td style="font-weight:600"
+                            th:text="${entry.value}"></td>
+                        <td>
+                            <div style="background:#e5e7eb;border-radius:4px;
+                                            height:8px;width:100px;overflow:hidden">
+                                <div th:style="'background:#4f8ef7;height:8px;border-radius:4px;width:'
+                                                   + ${entry.value * 100 / (totalProducts > 0 ? totalProducts : 1)}
+                                                   + '%'">
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Top 5 Products by Stock Value -->
+        <!-- NOTE: topProductsByValue is now a List<Map> from the controller -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Top 5 Products by Stock Value</span>
+            </div>
+            <div th:if="${#lists.isEmpty(topProductsByValue)}"
+                 class="text-muted text-center" style="padding:20px">
+                No products yet
+            </div>
+            <div class="table-wrap" th:unless="${#lists.isEmpty(topProductsByValue)}">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Stock</th>
+                        <th>Unit Price</th>
+                        <th>Total Value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- p is a Map with keys: name, stock, price, totalValue -->
+                    <tr th:each="p : ${topProductsByValue}">
+                        <td style="font-weight:500"
+                            th:text="${p['name']}"></td>
+                        <td th:text="${p['stock']}"></td>
+                        <td th:text="'LKR ' + ${p['price']}"></td>
+                        <td style="font-weight:600;color:#10b981"
+                            th:text="'LKR ' + ${#numbers.formatDecimal(p['totalValue'],1,'COMMA',2,'POINT')}">
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Low Stock Alert Table -->
+    <div class="card" style="margin-bottom:24px"
+         th:if="${!#lists.isEmpty(lowStockProducts)}">
+        <div class="card-header">
+            <span class="card-title" style="color:#dc2626">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                Low Stock Alert
+            </span>
+            <a th:href="@{/stock/new}" class="btn btn-primary btn-sm">
+                Record Stock-In
+            </a>
+        </div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th>Category</th>
+                    <th>Current Stock</th>
+                    <th>Reorder Level</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${lowStockProducts}">
+                    <td style="font-weight:500" th:text="${p.name}"></td>
+                    <td class="font-mono" th:text="${p.sku}"></td>
+                    <td>
+                            <span class="badge badge-info"
+                                  th:text="${p.category.name().replace('_',' ')}">
+                            </span>
+                    </td>
+                    <td style="font-weight:600"
+                        th:text="${p.stockQuantity}"></td>
+                    <td th:text="${p.reorderLevel}"></td>
+                    <td>
+                            <span th:if="${p.outOfStock}"
+                                  class="badge badge-danger">Out of Stock</span>
+                        <span th:unless="${p.outOfStock}"
+                              class="badge badge-warning">Low Stock</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION 2 — ORDER SUMMARY
+    ══════════════════════════════════════════════════ -->
+    <div style="margin-bottom:10px">
+        <p style="font-size:12px;font-weight:700;text-transform:uppercase;
+                  letter-spacing:1px;color:#9ca3af;margin-bottom:14px">
+            Order Summary
+        </p>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom:24px">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-bag-check"></i></div>
+            <div>
+                <div class="stat-value" th:text="${totalOrders}">0</div>
+                <div class="stat-label">Total Orders</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon amber"><i class="bi bi-clock-history"></i></div>
+            <div>
+                <div class="stat-value" th:text="${pendingOrders}">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-check2-circle"></i></div>
+            <div>
+                <div class="stat-value" th:text="${deliveredOrders}">0</div>
+                <div class="stat-label">Delivered</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="bi bi-x-circle"></i></div>
+            <div>
+                <div class="stat-value" th:text="${cancelledOrders}">0</div>
+                <div class="stat-label">Cancelled</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon teal"><i class="bi bi-cash-stack"></i></div>
+            <div>
+                <div class="stat-value"
+                     style="font-size:16px"
+                     th:text="'LKR ' + ${#numbers.formatDecimal(totalOrderValue,1,'COMMA',2,'POINT')}">
+                </div>
+                <div class="stat-label">Total Order Value</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Status Breakdown + Recent Orders -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+
+        <!-- Order Status Breakdown -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Order Status Breakdown</span>
+            </div>
+            <table class="data-table">
+                <thead>
+                <tr><th>Status</th><th>Count</th><th>Visual</th></tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><span class="badge badge-warning">PENDING</span></td>
+                    <td style="font-weight:600" th:text="${pendingOrders}"></td>
+                    <td>
+                        <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100px">
+                            <div th:style="'background:#f59e0b;height:8px;border-radius:4px;width:'
+                                               + ${pendingOrders * 100 / (totalOrders > 0 ? totalOrders : 1)}
+                                               + '%'"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-info">CONFIRMED</span></td>
+                    <td style="font-weight:600" th:text="${confirmedOrders}"></td>
+                    <td>
+                        <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100px">
+                            <div th:style="'background:#3b82f6;height:8px;border-radius:4px;width:'
+                                               + ${confirmedOrders * 100 / (totalOrders > 0 ? totalOrders : 1)}
+                                               + '%'"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">SHIPPED</span></td>
+                    <td style="font-weight:600" th:text="${shippedOrders}"></td>
+                    <td>
+                        <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100px">
+                            <div th:style="'background:#8b5cf6;height:8px;border-radius:4px;width:'
+                                               + ${shippedOrders * 100 / (totalOrders > 0 ? totalOrders : 1)}
+                                               + '%'"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-success">DELIVERED</span></td>
+                    <td style="font-weight:600" th:text="${deliveredOrders}"></td>
+                    <td>
+                        <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100px">
+                            <div th:style="'background:#10b981;height:8px;border-radius:4px;width:'
+                                               + ${deliveredOrders * 100 / (totalOrders > 0 ? totalOrders : 1)}
+                                               + '%'"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-danger">CANCELLED</span></td>
+                    <td style="font-weight:600" th:text="${cancelledOrders}"></td>
+                    <td>
+                        <div style="background:#e5e7eb;border-radius:4px;height:8px;width:100px">
+                            <div th:style="'background:#ef4444;height:8px;border-radius:4px;width:'
+                                               + ${cancelledOrders * 100 / (totalOrders > 0 ? totalOrders : 1)}
+                                               + '%'"></div>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Recent Orders</span>
+                <a th:href="@{/orders}" class="btn btn-outline btn-sm">View All</a>
+            </div>
+            <div th:if="${#lists.isEmpty(recentOrders)}"
+                 class="text-muted text-center" style="padding:20px">
+                No orders yet
+            </div>
+            <div class="table-wrap" th:unless="${#lists.isEmpty(recentOrders)}">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Product</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="o : ${recentOrders}">
+                        <td class="font-mono" th:text="${o.orderNumber}"></td>
+                        <td th:text="${o.product.name}"></td>
+                        <td th:text="'LKR ' + ${o.totalAmount}"></td>
+                        <td>
+                                <span class="badge"
+                                      th:classappend="${o.status.name() == 'PENDING'}    ? 'badge-warning' :
+                                                      (${o.status.name() == 'DELIVERED'} ? 'badge-success' :
+                                                      (${o.status.name() == 'CANCELLED'} ? 'badge-danger'  :
+                                                      (${o.status.name() == 'CONFIRMED'} ? 'badge-info'    :
+                                                                                            'badge-purple')))"
+                                      th:text="${o.status}">
+                                </span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION 3 — STOCK ACTIVITY
+    ══════════════════════════════════════════════════ -->
+    <div style="margin-bottom:10px">
+        <p style="font-size:12px;font-weight:700;text-transform:uppercase;
+                  letter-spacing:1px;color:#9ca3af;margin-bottom:14px">
+            Stock Activity
+        </p>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom:24px">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-arrow-left-right"></i></div>
+            <div>
+                <div class="stat-value" th:text="${totalTransactions}">0</div>
+                <div class="stat-label">Total Transactions</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-arrow-down-circle"></i></div>
+            <div>
+                <div class="stat-value" th:text="${stockInCount}">0</div>
+                <div class="stat-label">Stock In</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="bi bi-arrow-up-circle"></i></div>
+            <div>
+                <div class="stat-value" th:text="${stockOutCount}">0</div>
+                <div class="stat-label">Stock Out</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon amber"><i class="bi bi-sliders"></i></div>
+            <div>
+                <div class="stat-value" th:text="${adjustCount}">0</div>
+                <div class="stat-label">Adjustments</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Stock Transactions -->
+    <div class="card" style="margin-bottom:24px">
+        <div class="card-header">
+            <span class="card-title">Recent Stock Transactions</span>
+            <a th:href="@{/stock}" class="btn btn-outline btn-sm">View All</a>
+        </div>
+        <div th:if="${#lists.isEmpty(recentTransactions)}"
+             class="text-muted text-center" style="padding:20px">
+            No transactions yet
+        </div>
+        <div class="table-wrap" th:unless="${#lists.isEmpty(recentTransactions)}">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>Quantity</th>
+                    <th>Notes</th>
+                    <th>Date</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="t : ${recentTransactions}">
+                    <td class="font-mono text-muted" th:text="${t.id}"></td>
+                    <td style="font-weight:500" th:text="${t.product.name}"></td>
+                    <td>
+                            <span class="badge"
+                                  th:classappend="${t.type.name() == 'STOCK_IN'}   ? 'badge-success' :
+                                                  (${t.type.name() == 'STOCK_OUT'} ? 'badge-danger'  :
+                                                                                      'badge-info')"
+                                  th:text="${t.type.name().replace('_',' ')}">
+                            </span>
+                    </td>
+                    <td th:text="${t.quantity}"></td>
+                    <td class="text-muted"
+                        th:text="${t.notes != null ? t.notes : '—'}"></td>
+                    <td class="text-muted"
+                        th:text="${#temporals.format(t.createdAt, 'dd MMM yyyy')}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION 4 — SUPPLIER SUMMARY
+    ══════════════════════════════════════════════════ -->
+    <div style="margin-bottom:10px">
+        <p style="font-size:12px;font-weight:700;text-transform:uppercase;
+                  letter-spacing:1px;color:#9ca3af;margin-bottom:14px">
+            Supplier Summary
+        </p>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom:24px">
+        <div class="stat-card">
+            <div class="stat-icon teal"><i class="bi bi-truck"></i></div>
+            <div>
+                <div class="stat-value" th:text="${totalSuppliers}">0</div>
+                <div class="stat-label">Total Suppliers</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+            <div>
+                <div class="stat-value" th:text="${activeSuppliers}">0</div>
+                <div class="stat-label">Active Suppliers</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="bi bi-x-circle"></i></div>
+            <div>
+                <div class="stat-value"
+                     th:text="${totalSuppliers - activeSuppliers}">0</div>
+                <div class="stat-label">Inactive Suppliers</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         SECTION 5 — SAVE REPORT
+    ══════════════════════════════════════════════════ -->
+    <div style="margin-bottom:10px">
+        <p style="font-size:12px;font-weight:700;text-transform:uppercase;
+                  letter-spacing:1px;color:#9ca3af;margin-bottom:14px">
+            Save Report
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Save Current Report Snapshot</span>
+            <a th:href="@{/reports/saved}" class="btn btn-outline btn-sm">
+                <i class="bi bi-archive"></i>
+                View Saved Reports
+                <span th:if="${savedReportsCount > 0}"
+                      style="background:#4f8ef7;color:white;border-radius:10px;
+                             padding:1px 7px;font-size:11px;margin-left:4px"
+                      th:text="${savedReportsCount}">
+                </span>
+            </a>
+        </div>
+        <form th:action="@{/reports/save}"
+              th:object="${newReport}"
+              method="post">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Report Title *</label>
+                    <input type="text" th:field="*{title}"
+                           class="form-control"
+                           placeholder="e.g. May 2026 Inventory Summary">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Report Type *</label>
+                    <select th:field="*{reportType}" class="form-control">
+                        <option value="">-- Select Type --</option>
+                        <option th:each="t : ${reportTypes}"
+                                th:value="${t}"
+                                th:text="${t.name().replace('_',' ')}">
+                        </option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label class="form-label">Notes</label>
+                    <textarea th:field="*{notes}"
+                              class="form-control"
+                              placeholder="Any observations or notes...">
+                    </textarea>
+                </div>
+            </div>
+            <div class="flex gap-2" style="margin-top:20px">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Save Report
+                </button>
+            </div>
+        </form>
+    </div>
+
+</main>
+</body>
+</html>
