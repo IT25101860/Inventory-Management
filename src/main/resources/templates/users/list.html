@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/main :: layout(~{::title}, ~{::main})}">
+<head><title>Users — InvStock</title></head>
+<body>
+<main>
+  <div class="page-header flex justify-between items-center">
+    <div>
+      <h1 class="page-title">Users</h1>
+      <p class="page-subtitle">Manage system users and access roles</p>
+    </div>
+    <a th:href="@{/users/new}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add User</a>
+  </div>
+
+  <div th:if="${success}" class="alert alert-success"><i class="bi bi-check-circle"></i><span th:text="${success}"></span></div>
+  <div th:if="${error}" class="alert alert-danger"><i class="bi bi-exclamation-circle"></i><span th:text="${error}"></span></div>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(users)}">
+          <td colspan="6" class="text-center text-muted" style="padding:30px">No users found.</td>
+        </tr>
+        <tr th:each="u : ${users}">
+          <td class="font-mono text-muted" th:text="${u.id}"></td>
+          <td style="font-weight:500" th:text="${u.username}"></td>
+          <td th:text="${u.email}"></td>
+          <td><span class="badge badge-purple" th:text="${u.role}"></span></td>
+          <td>
+            <span th:if="${u.active}" class="badge badge-success">Active</span>
+            <span th:unless="${u.active}" class="badge badge-gray">Inactive</span>
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <a th:href="@{/users/{id}/edit(id=${u.id})}" class="btn btn-outline btn-sm btn-icon"><i class="bi bi-pencil"></i></a>
+              <form th:action="@{/users/{id}/delete(id=${u.id})}" method="post" onsubmit="return confirm('Deactivate this user?')">
+                <button type="submit" class="btn btn-danger btn-sm btn-icon"><i class="bi bi-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</body>
+</html>
